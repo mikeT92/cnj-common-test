@@ -22,7 +22,7 @@ Provides a text fixture for system test classes running on REST APIs which perfo
 access token and an ID token from the specified OpenID Connect provider.
 
 __Prerequisites:__
-* expects a system property __target.route__ to be set to the base URL of the REST endpoint to test.
+* expects a system property __test.target.route__ or an environment variable __TEST_TARGET_ROUTE__to be set to the base URL of the REST endpoint to test.
 * expects a properties configuration file __META-INF/test-config.properties__ providing the following properties:
 
 | Property Name | Type | Mandatory? | Description |
@@ -112,12 +112,12 @@ public class HelloResourceSystemTest {
 #### Step 4: Pass tokens provided by the test fixture with all your requests
 
 Don't forget to pass at least the access token obtained during __RestAssuredSystemTestFixture#onBefore()__ with all your
-requests by invoking __auth().preemptive().oauth2(fixture.getToken())__ on RestAssured:
+requests by invoking __auth().preemptive().oauth2(fixture.getAccessToken())__ on RestAssured:
 
 ```java 
 @Test
 public void getWelcomeMessageWithTokenMustReturn200() {
-    given().auth().preemptive().oauth2(fixture.getToken())
+    given().auth().preemptive().oauth2(fixture.getAccessToken())
             .get("api/v1/hello")
             .then().assertThat()
             .statusCode(200)
