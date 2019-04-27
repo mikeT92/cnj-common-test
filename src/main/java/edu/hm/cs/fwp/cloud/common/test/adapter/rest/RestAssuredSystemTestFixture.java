@@ -8,7 +8,6 @@ import io.restassured.config.SSLConfig;
 import io.restassured.http.ContentType;
 import io.restassured.response.ExtractableResponse;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -110,6 +109,7 @@ public class RestAssuredSystemTestFixture {
         targetRoute = this.config.getOptionalValue("target.route", String.class).orElse(this.config.getValue("test.target.route", String.class));
 
         skipReadinessProbe = this.config.getOptionalValue("test.target.readinessProbe.skip", Boolean.class).orElse(false);
+        logger.info(String.format("skipReadinessProbe=%s", skipReadinessProbe));
         readinessProbePath = this.config.getOptionalValue("test.target.readinessProbe.path", String.class).orElse("api/v1/probes/readiness");
         initialDelaySeconds = this.config.getOptionalValue("test.target.readinessProbe.initialDelaySeconds", Integer.class).orElse(10);
         failureThreshold = this.config.getOptionalValue("test.target.readinessProbe.failureThreshold", Integer.class).orElse(3);
@@ -117,6 +117,7 @@ public class RestAssuredSystemTestFixture {
         timeoutSeconds = this.config.getOptionalValue("test.target.readinessProbe.timeoutSeconds", Integer.class).orElse(1);
 
         skipOpenIdConnectLogin = this.config.getOptionalValue("test.oidc.skip", Boolean.class).orElse(false);
+        logger.info(String.format("skipOpenIdConnectLogin=%s", skipOpenIdConnectLogin));
         if (!skipOpenIdConnectLogin) {
             oidcClientId = this.config.getValue("test.oidc.client.clientId", String.class);
             oidcClientSecret = this.config.getValue("test.oidc.client.clientSecret", String.class);
@@ -153,7 +154,7 @@ public class RestAssuredSystemTestFixture {
                     logger.info(String.format("readiness probe at [%s/%s] reported UP", RestAssured.baseURI, readinessProbePath));
                 } catch (AssertionError | Exception ex) {
                     // explicitly ignore any exceptions
-                    logger.log(Level.WARNING, "readiness probe failed", ex);
+                    logger.info("checking readiness probe failed (assuming application is still booting)");
                 }
                 if (!succeeded) {
                     if (--failureThreshold > 0) {
@@ -189,9 +190,13 @@ public class RestAssuredSystemTestFixture {
             this.idToken = response.jsonPath().getString("id_token");
             if (this.accessToken == null) {
                 throw new IllegalStateException("expected authentication provider to return access token but got none");
+            } else {
+                logger.info(String.format("got access token: \"%s\"", this.accessToken));
             }
             if (this.idToken == null) {
                 logger.warning("expected authentication provider to return ID token but got none");
+            } else {
+                logger.info(String.format("got ID token: \"%s\"", this.idToken));
             }
         }
     }
